@@ -9,6 +9,7 @@ https://github.com/muupan/async-rl/blob/master/a3c_ale.py
 weights initialization based on muupan's code
 """
 
+
 class ConvLayer:    
     def __init__(self, input_channel, output_channel, kernel_size, stride
                  , is_weights_init=True):
@@ -218,7 +219,8 @@ class SoftmaxLayer:
     
     def get_shape_wb(self):
         pass
-    
+
+
 class ReLULayer:
     def __init__(self):
         self.in_val = 0
@@ -246,4 +248,13 @@ class ReLULayer:
         pass
     
     def get_shape_wb(self):
+        pass
+
+
+class TauQuantileleLayer:
+    def __init__(self):
+        self.in_val = 0
+        self.is_wb = False
+
+    def forward(self, in_data):
         pass

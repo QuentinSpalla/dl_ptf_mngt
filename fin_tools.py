@@ -6,9 +6,11 @@ Created on Tue Mar  6 11:50:48 2018
 @author: SPALLA
 """
 
+
 def get_average_price(high_price, low_price, close_price):
     # fonction pour recuperer le prix moyen a partir du High, Low et Close
     return ((high_price+low_price+close_price)/3)
+
 
 def get_return_from_prices (v_prices, lag):
     # fonction pour recuperer les rendements a partir des prix (selon une periode)
@@ -16,6 +18,7 @@ def get_return_from_prices (v_prices, lag):
     delta = delta[lag:]
     v_returns = delta/v_prices.shift(lag)
     return v_returns[lag:]
+
 
 def get_rsi_from_price(v_prices, lag):
     delta = v_prices.diff()
@@ -31,6 +34,7 @@ def get_rsi_from_price(v_prices, lag):
     rsi= 100.0 - (100.0 / (1.0 + RS))
     
     return rsi
+
 
 def get_sto_osc_from_price(v_prices, v_low, v_high, lag): 
     stok = ((v_prices - v_low.rolling(lag).min()) / (v_high.rolling(lag).max() - v_low.rolling(lag_days).min())) * 100

@@ -3,6 +3,7 @@
 import numpy as np
 from tools import get_vect_from_list
 
+
 class NNetwork():
     """
     Deep Neural Network that takes in 
@@ -16,8 +17,7 @@ class NNetwork():
         self.pi = []
         self.value = 0
         self.layers = {}
-    
-    
+
     def add_layer(self, layer, position):
         self.layers[position] = layer    
     
@@ -33,16 +33,14 @@ class NNetwork():
             if np.min(out_data)< -5 or np.max(out_data)>5:
                 print('ERROR out_data forward')
         return out_data
-        
-        
+
     def get_value(self, lstm_outputs, pos_layer):
         """
         Returns the value of the current state
         """
         layer = self.layers[pos_layer]
         return layer.forward(lstm_outputs)
-    
-    
+
     def get_pi(self, lstm_outputs, pos_layer1, pos_layer2):
         """
         Returns the probabilities of selecting each action

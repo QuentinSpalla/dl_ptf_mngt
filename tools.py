@@ -22,6 +22,14 @@ def get_vect_from_list(list_values):
                                      , axis=0)
     return vect_values
 
+
+def rename_df(df, prefix='', suffix=''):
+    df_colname = df.columns
+    new_names = prefix + df_colname + suffix
+    df.columns = new_names
+    return df
+
+
 def get_list_from_vect(vect_values, all_shapes):
     """
     Returns list containing matrixes from vector (N, 1)
