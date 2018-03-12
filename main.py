@@ -12,8 +12,11 @@ from strategy import Strategy
 
 dj = AllData(constants.INPUT_FILE)
 dj.add_indicators()
+dj.create_target()
 dj.clean_data()
 
-my_strategy = Strategy(dj.loc[:, dj.columns != 'DATE'], dj['DATE'])
+my_strategy = Strategy(dj.data.loc[:, dj.data.columns != 'DATE'].values, dj.data['DATE'].values, dj.df_target)
+my_strategy.create_lstm()
+my_strategy.train()
 
 print('the end')

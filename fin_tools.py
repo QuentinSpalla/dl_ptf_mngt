@@ -5,6 +5,11 @@ Created on Tue Mar  6 11:50:48 2018
 
 @author: SPALLA
 """
+import numpy as np
+
+
+def compute_sharpe_ratio(ret_p, risk_free_rate, st_dev_p):
+    return (ret_p - risk_free_rate) / st_dev_p
 
 
 def get_average_price(high_price, low_price, close_price):
@@ -18,6 +23,19 @@ def get_return_from_prices (v_prices, lag):
     delta = delta[lag:]
     v_returns = delta/v_prices.shift(lag)
     return v_returns[lag:]
+
+
+def get_vol_from_ret(v_ret, lag):
+    """
+    Returns volatility from returns with given period
+    """
+    v_vol = np.zeros([v_ret.shape[0]-lag, v_ret.shape[1]])
+    # v_vol = np.zeros(len(v_ret) - lag)
+
+    for curt_idx in range(0, len(v_ret)-lag, 1):
+        v_temp = v_ret[curt_idx:curt_idx+lag]
+        v_vol[curt_idx] = np.std(v_temp)
+    return v_vol
 
 
 def get_rsi_from_price(v_prices, lag):

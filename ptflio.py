@@ -15,9 +15,6 @@ class Portfolio:
         self.curt_return = 0
         self.name = name
 
-    def compute_sharpe_ratio(self):
-        pass
-
     def update_weights(self, new_w):
         self.weights = new_w
 
@@ -26,3 +23,10 @@ class Portfolio:
 
     def update_return(self, new_rt):
         self.curt_return = new_rt
+
+    def compute_return(self, assets_ret):
+        return np.dot(self.weights, assets_ret)
+
+    def update_weights_inv_val(self, values):
+        temp_w = values / sum(values)
+        self.update_weights(temp_w)
