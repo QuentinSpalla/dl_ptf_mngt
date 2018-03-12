@@ -53,7 +53,7 @@ class Strategy:
         nn_i = self.create_neural_network(layer.SigmoidLayer(), constants.SIG_I_POS)
         nn_c = self.create_neural_network(layer.TanhLayer(), constants.TANH_C_POS)
         nn_o = self.create_neural_network(layer.SigmoidLayer(), constants.SIG_O_POS)
-        self.lstm = LSTM(nn_f, nn_i, nn_c, nn_o)
+        self.lstm = LSTM(nn_f, nn_i, nn_c, nn_o, constants.TAU_QUANTILE)
 
     def create_portfolio(self):
         self.ptf = Portfolio(self.data.shape[1], 'portfolio')
@@ -71,10 +71,24 @@ class Strategy:
         """
         h_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
         c_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
+        curt_batch_size = 0
+        intermediate_values = []
+        out_data = []
 
         for curt_index in range(0, int(math.floor(size_train * self.data.shape[0])), 1):
-            in_data = self.data[curt_index, :].reshape(360,1)
-            h_prev, c_prev = self.lstm.forward(h_prev, c_prev, in_data.T)
+            in_data = self.data[curt_index, :].reshape(360, 1)
+            h_prev, c_prev = self.lstm.forward(h_prev, c_prev, in_data)
+            out_data.append(h_prev)
+
+            if curt_batch_size == constants.BATCH_SIZE:
+                self.lstm.backward(out_data,
+                                   intermediate_values,
+                                   self.targets[curt_index-constants.BATCH_SIZE:curt_index])
+                curt_batch_size = 0
+                intermediate_values = []
+                out_data = []
+
+            curt_batch_size += 1
 
     def test(self, size_test=0.3, is_nn_to_train=False):
         """
