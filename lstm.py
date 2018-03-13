@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-
+from lstm_param import Param
 
 class LSTM:
     def __init__(self, nn_f, nn_i, nn_c_bar, nn_o, tau_quantile):
@@ -11,6 +11,13 @@ class LSTM:
         self.nn_c_bar = nn_c_bar
         self.nn_o = nn_o
         self.tau_quantile = tau_quantile
+        self.z = Param()
+        self.f = Param()
+        self.i = Param()
+        self.c_bar = Param()
+        self.c = Param()
+        self.o = Param()
+        self.h = Param()
 
     def forward(self, h_prev, c_prev, in_data):
         """
@@ -20,17 +27,52 @@ class LSTM:
         :param in_data: input data with features
         :return: predicted output, new cell state
         """
-        z = np.concatenate((h_prev, in_data), axis=0)
-        f = self.nn_f.get_output(z)
-        i = self.nn_i.get_output(z)
-        c_bar = self.nn_c_bar.get_output(z)
-        c = f * c_prev + i * c_bar
-        o = self.nn_o.get_output(z)
-        h = o * np.tanh(c)
-        return h, c
+        self.z.v = np.concatenate((h_prev, in_data), axis=0)
+        self.f.v = self.nn_f.get_output(self.z.v)
+        self.i.v = self.nn_i.get_output(self.z.v)
+        self.c_bar.v = self.nn_c_bar.get_output(self.z.v)
+        self.c.v = self.f.v * c_prev + self.i.v * self.c_bar.v
+        self.o.v = self.nn_o.get_output(self.z.v)
+        self.h.v = o.v * np.tanh(self.c.v)
+        return self.h.v, self.c.v
 
     def backward(self, out_data, intermediate_values, targets):
-        pass
+        target, dh_next, dC_next, C_prev,
+        z, f, i, C_bar, C, o, h, v, y,
+        p = parameters):
+
+        self.o.d = dh * tanh(C)
+        do = dsigmoid(o) * do
+        p.W_o.d += np.dot(do, z.T)
+        p.b_o.d += do
+
+        dC = np.copy(dC_next)
+        dC += dh * o * dtanh(tanh(C))
+        dC_bar = dC * i
+        dC_bar = dtanh(C_bar) * dC_bar
+        p.W_C.d += np.dot(dC_bar, z.T)
+        p.b_C.d += dC_bar
+
+        di = dC * C_bar
+        di = dsigmoid(i) * di
+        p.W_i.d += np.dot(di, z.T)
+        p.b_i.d += di
+
+        df = dC * C_prev
+        df = dsigmoid(f) * df
+        p.W_f.d += np.dot(df, z.T)
+        p.b_f.d += df
+
+        dz = (np.dot(p.W_f.v.T, df)
+
+    + np.dot(p.W_i.v.T, di)
+    + np.dot(p.W_C.v.T, dC_bar)
+    + np.dot(p.W_o.v.T, do))
+    dh_prev = dz[:H_size, :]
+    dC_prev = f * dC
+
+
+return dh_prev, dC_prev
 
     def get_loss(self, out_data, target):
         """
