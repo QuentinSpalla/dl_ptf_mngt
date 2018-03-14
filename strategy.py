@@ -79,6 +79,7 @@ class Strategy:
             in_data = self.data[curt_index, :].reshape(360, 1)
             h_prev, c_prev = self.lstm.forward(h_prev, c_prev, in_data)
             out_data.append(h_prev)
+            intermediate_values.append(self.lstm.get_intermediate_values())
 
             if curt_batch_size == constants.BATCH_SIZE:
                 self.lstm.backward(out_data,

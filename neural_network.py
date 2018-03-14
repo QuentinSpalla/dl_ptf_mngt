@@ -39,11 +39,16 @@ class NNetwork():
         of layers which are useful for the backpropagation
         """
         intermediate_values = []
-        for layer_pos in range(1, len(self.layers) + 1):
+        for layer_pos in range(1, len(self.layers)+1):
             layer = self.layers[layer_pos]               
             intermediate_values.append(layer.in_val)
         return intermediate_values
-    
+
+    def update_val(self, inter_val):
+        for layer_pos in range(1, len(self.layers)+1):
+            layer = self.layers[layer_pos]
+            layer.update_val(inter_val[layer_pos-1])
+
     def backpropag_pi(self, loss, values):
         """
         Makes the backpropagation on all the convolutional network 
