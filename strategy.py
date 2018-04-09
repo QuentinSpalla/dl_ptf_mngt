@@ -56,13 +56,16 @@ class Strategy:
         self.lstm = LSTM(nn_f, nn_i, nn_c, nn_o, constants.TAU_QUANTILE)
 
     def create_portfolio(self):
-        self.ptf = Portfolio(self.data.shape[1], 'portfolio')
+        self.ptf = Portfolio(self.data.shape[1], constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
+                             , name='portfolio')
+        self.ptf.update_weights(1 / len(self.ptf.weights))
 
     def create_benchmark(self):
         """
         Creates equal weights benchmark portfolio
         """
-        self.bmk = Portfolio(self.data.shape[1], 'benchmark')
+        self.bmk = Portfolio(self.data.shape[1], constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
+                             , name='benchmark')
         self.bmk.update_weights(1/len(self.bmk.weights))
 
     def train(self, size_train=0.7):
@@ -71,23 +74,23 @@ class Strategy:
         """
         h_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
         c_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
-        curt_batch_size = 0
+        curt_batch_size = 1
         intermediate_values = []
-        out_data = []
+        out_data = np.zeros((constants.BATCH_SIZE, constants.FC_OUTPUT_NEURONS))
 
         for curt_index in range(0, int(math.floor(size_train * self.data.shape[0])), 1):
-            in_data = self.data[curt_index, :].reshape(360, 1)
+            in_data = self.data[curt_index, :].reshape(self.data.shape[1], 1)
             h_prev, c_prev = self.lstm.forward(h_prev, c_prev, in_data)
-            out_data.append(h_prev)
+            out_data[curt_batch_size-1, :] = h_prev.reshape((constants.FC_OUTPUT_NEURONS, ))
             intermediate_values.append(self.lstm.get_intermediate_values())
 
             if curt_batch_size == constants.BATCH_SIZE:
                 self.lstm.backward(out_data,
                                    intermediate_values,
-                                   self.targets[curt_index-constants.BATCH_SIZE:curt_index])
+                                   self.targets[curt_index-constants.BATCH_SIZE+1:curt_index+1])
                 curt_batch_size = 0
                 intermediate_values = []
-                out_data = []
+                out_data = np.zeros((constants.BATCH_SIZE, constants.FC_OUTPUT_NEURONS))
 
             curt_batch_size += 1
 
@@ -97,8 +100,17 @@ class Strategy:
         Updates the portfolios weights and computes portfolio returns.
         """
         if not is_nn_to_train:
+            h_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
+            c_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
             curt_index = int(math.floor((1-size_test)*self.data.shape[0]))
 
             for curt_index in range(curt_index, self.data.shape[0], 1):
-                pred_sharpe = self.nn.get_output()
-                self.ptf.update_weights_inv_val(pred_sharpe)
+                in_data = self.data[curt_index, :].reshape(self.data.shape[1], 1)
+                h_prev, c_prev = self.lstm.forward(h_prev, c_prev, in_data)
+
+                self.ptf.compute_return(self.data.filter(like='RET_30'))
+
+                self.ptf.update_weights_inv_val(h_prev)
+                self.ptf.compute_value()
+                self.ptf.compute_transaction_fees()
+                self.ptf.update_val_list()

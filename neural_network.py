@@ -49,6 +49,22 @@ class NNetwork():
             layer = self.layers[layer_pos]
             layer.update_val(inter_val[layer_pos-1])
 
+    def backpropagation(self, d_loss):
+        """
+        Backpropagation threw the nn's layers
+        :param d_loss: derivative loss
+        :return: First layer derivative
+        """
+        out_data = d_loss
+        layer_pos = len(self.layers)    # if not activation layer :- 1
+
+        while layer_pos >= 1:
+            layer = self.layers[layer_pos]
+            out_data = layer.backward(out_data)
+            layer_pos -= 1
+
+        return out_data
+
     def backpropag_pi(self, loss, values):
         """
         Makes the backpropagation on all the convolutional network 
@@ -64,7 +80,8 @@ class NNetwork():
             out_data = layer.backward(out_data)
             if np.min(out_data)< -5 or np.max(out_data)>5:
                 print('ERROR out_data backpropag')
-            layer_pos -= 1        
+            layer_pos -= 1
+
     
     def get_all_diff_weights_bias(self):
         """

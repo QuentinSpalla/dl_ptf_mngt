@@ -4,6 +4,7 @@
 import numpy as np
 from lstm_param import Param
 
+
 class LSTM:
     def __init__(self, nn_f, nn_i, nn_c_bar, nn_o, tau_quantile):
         self.nn_f = nn_f
@@ -61,9 +62,9 @@ class LSTM:
         """
 
         dc = np.copy(d_c_next)
-        dc += dh * self.inter_val.o * (1-np.tanh(self.inter_val.c) ^ 2)
+        dc += dh * self.inter_val.o * (1-np.tanh(self.inter_val.c) ** 2)
         dc_bar = dc * self.inter_val.i
-        dc_bar = (1-self.inter_val.c_bar) ^ 2 * dc_bar
+        dc_bar = (1-self.inter_val.c_bar)**2 * dc_bar
         # NN direct
         d_z_c_bar = self.nn_c_bar.backpropagation(dc_bar)
         """
@@ -106,15 +107,17 @@ class LSTM:
     def backward(self, out_data, intermediate_values, targets):
         dh_next = np.zeros((targets.shape[1], 1))
         dc_next = np.zeros((targets.shape[1], 1))
+
         for curt_idx in range(targets.shape[0]):
             self.update_inter_val(intermediate_values[curt_idx])
-            curt_loss, curt_d_loss = self.get_loss_and_d(out_data[curt_idx], targets[curt_idx, :].T)
+            curt_loss, curt_d_loss = self.get_loss_and_d(out_data[curt_idx, :], targets[curt_idx, :])
             dh_next, dc_next = self.backprogation(curt_d_loss, dh_next, dc_next)
 
     def get_loss_and_d(self, out_data, target):
         """
         Computes Tau Quantile Loss in order to put more weights on negative returns
         """
-        loss = sum((1-self.tau_quantile) * max((0, out_data-target)) + self.tau_quantile * max((0, target-out_data)))
-        d_loss = np.ones(out_data.shape)*self.tau_quantile - max((0, target-out_data))/(target-out_data)
-        return loss, d_loss
+        loss = (1-self.tau_quantile) * np.maximum(0, out_data-target) \
+            + self.tau_quantile * np.maximum(0, target-out_data)
+        d_loss = np.ones(out_data.shape)*self.tau_quantile - np.maximum(0, target-out_data)/(target-out_data)
+        return loss.reshape((loss.shape[0], 1)), d_loss.reshape((loss.shape[0], 1))

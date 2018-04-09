@@ -7,4 +7,4 @@ Deep RL in Finance: https://arxiv.org/pdf/1706.10059.pdf
 ==> seems not interesting
 
 
-LSTM numpy : http://blog.varunajayasiri.com/numpy_lstm.html
+LSTM numpy : `http://blog.varunajayasiri.com/numpy_lstm.html
