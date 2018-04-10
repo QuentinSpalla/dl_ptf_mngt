@@ -41,7 +41,7 @@ class Portfolio:
         self.transac_values.append(self.curt_transac_value)
 
     def compute_transaction_fees(self):
-        self.curt_transac_vale = sum(abs(self.weights - self.last_weights)) * self.curt_value * self.transac_fee_rate
+        self.curt_transac_value = sum(abs(self.weights - self.last_weights)) * self.curt_value * self.transac_fee_rate
 
     def compute_return(self, assets_ret):
         self.curt_return = np.dot(self.weights, assets_ret)

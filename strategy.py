@@ -18,13 +18,14 @@ class Strategy:
     """
     Contains the neural network and the portfolios
     """
-    def __init__(self, data, dates, targets):
+    def __init__(self, data, dates, targets, first_ret_idx):
         self.targets = targets
         self.data = data
         self.dates = dates
         self.bmk = None
         self.ptf = None
         self.lstm = None
+        self.first_ret_idx = first_ret_idx
 
     def create_neural_network(self, act_fun_lay, act_fun_pos):
         """
@@ -56,17 +57,17 @@ class Strategy:
         self.lstm = LSTM(nn_f, nn_i, nn_c, nn_o, constants.TAU_QUANTILE)
 
     def create_portfolio(self):
-        self.ptf = Portfolio(self.data.shape[1], constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
+        self.ptf = Portfolio(constants.FC_OUTPUT_NEURONS, constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
                              , name='portfolio')
-        self.ptf.update_weights(1 / len(self.ptf.weights))
+        self.ptf.update_weights(1 / len(self.ptf.weights) * np.ones(len(self.ptf.weights)))
 
     def create_benchmark(self):
         """
         Creates equal weights benchmark portfolio
         """
-        self.bmk = Portfolio(self.data.shape[1], constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
+        self.bmk = Portfolio(constants.FC_OUTPUT_NEURONS, constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
                              , name='benchmark')
-        self.bmk.update_weights(1/len(self.bmk.weights))
+        self.bmk.update_weights(1/len(self.bmk.weights) * np.ones(len(self.bmk.weights)))
 
     def train(self, size_train=0.7):
         """
@@ -103,14 +104,26 @@ class Strategy:
             h_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
             c_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
             curt_index = int(math.floor((1-size_test)*self.data.shape[0]))
+            bmk_wgts = (1 / len(self.bmk.weights) * np.ones(len(self.bmk.weights)))
 
-            for curt_index in range(curt_index, self.data.shape[0], 1):
+            for curt_index in range(curt_index,
+                                    self.data.shape[0]-constants.NBR_MINUTES_STEP,
+                                    constants.NBR_MINUTES_STEP):
                 in_data = self.data[curt_index, :].reshape(self.data.shape[1], 1)
                 h_prev, c_prev = self.lstm.forward(h_prev, c_prev, in_data)
-
-                self.ptf.compute_return(self.data.filter(like='RET_30'))
-
-                self.ptf.update_weights_inv_val(h_prev)
+                temp_ret = self.data[curt_index + constants.NBR_MINUTES_STEP,
+                           self.first_ret_idx:self.first_ret_idx+constants.FC_OUTPUT_NEURONS.reshape(constants.FC_OUTPUT_NEURONS, 1)]
+                self.ptf.compute_return(temp_ret)
                 self.ptf.compute_value()
+                self.ptf.update_weights_inv_rdt(temp_ret)
+                self.ptf.update_weights_inv_val(h_prev)
                 self.ptf.compute_transaction_fees()
                 self.ptf.update_val_list()
+                self.ptf.update_time()
+                self.bmk.compute_return(temp_ret)
+                self.bmk.compute_value()
+                self.bmk.update_weights_inv_rdt(temp_ret)
+                self.bmk.update_weights_inv_val(bmk_wgts)
+                self.bmk.compute_transaction_fees()
+                self.bmk.update_val_list()
+                self.bmk.update_time()

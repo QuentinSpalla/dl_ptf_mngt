@@ -19,6 +19,7 @@ class AllData():
         self.df_prices = pd.read_csv(in_file, sep=';')
         self.data = self.df_prices.copy()
         self.df_target = None
+        self.first_idx_ret = 0
 
     def add_indicators(self):
         """
@@ -28,6 +29,9 @@ class AllData():
         for i in RG_RET_LAG:
             temp = ft.get_return_from_prices(self.df_prices.loc[:, self.df_prices.columns != 'DATE'], i)
             temp = rename_df(temp, prefix='RET_' + str(i))
+
+            if i == NBR_MINUTES_STEP:
+                self.first_idx_ret = self.data.shape[1]
             self.data = pd.concat([self.data, temp], axis=1)
 
         # RSI
