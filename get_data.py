@@ -67,5 +67,8 @@ class AllData():
             self.data = self.data[max_to_remove+1:]
         else:
             self.target = self.target[max_to_remove:]
+
+        self.data = self.data.fillna(method='ffill')
+        self.target = self.target.fillna(method='ffill')
         # self.data.dropna(axis=0, how='any')
         # self.df_target = self.df_target[len(self.df_target)-len(self.data):]

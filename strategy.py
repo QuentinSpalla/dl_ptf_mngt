@@ -59,7 +59,7 @@ class Strategy:
     def create_portfolio(self):
         self.ptf = Portfolio(constants.FC_OUTPUT_NEURONS, constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
                              , name='portfolio')
-        self.ptf.update_weights(1 / len(self.ptf.weights) * np.ones(len(self.ptf.weights)))
+        self.ptf.update_weights(1 / len(self.ptf.weights) * np.ones([len(self.ptf.weights), 1]))
 
     def create_benchmark(self):
         """
@@ -67,7 +67,7 @@ class Strategy:
         """
         self.bmk = Portfolio(constants.FC_OUTPUT_NEURONS, constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
                              , name='benchmark')
-        self.bmk.update_weights(1/len(self.bmk.weights) * np.ones(len(self.bmk.weights)))
+        self.bmk.update_weights(1/len(self.bmk.weights) * np.ones([len(self.bmk.weights), 1]))
 
     def train(self, size_train=0.7):
         """
@@ -104,7 +104,7 @@ class Strategy:
             h_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
             c_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
             curt_index = int(math.floor((1-size_test)*self.data.shape[0]))
-            bmk_wgts = (1 / len(self.bmk.weights) * np.ones(len(self.bmk.weights)))
+            bmk_wgts = 1 / len(self.bmk.weights) * np.ones([len(self.bmk.weights), 1])
 
             for curt_index in range(curt_index,
                                     self.data.shape[0]-constants.NBR_MINUTES_STEP,
@@ -112,7 +112,7 @@ class Strategy:
                 in_data = self.data[curt_index, :].reshape(self.data.shape[1], 1)
                 h_prev, c_prev = self.lstm.forward(h_prev, c_prev, in_data)
                 temp_ret = self.data[curt_index + constants.NBR_MINUTES_STEP,
-                           self.first_ret_idx:self.first_ret_idx+constants.FC_OUTPUT_NEURONS.reshape(constants.FC_OUTPUT_NEURONS, 1)]
+                           self.first_ret_idx:self.first_ret_idx+constants.FC_OUTPUT_NEURONS].reshape(constants.FC_OUTPUT_NEURONS, 1)
                 self.ptf.compute_return(temp_ret)
                 self.ptf.compute_value()
                 self.ptf.update_weights_inv_rdt(temp_ret)
@@ -127,3 +127,6 @@ class Strategy:
                 self.bmk.compute_transaction_fees()
                 self.bmk.update_val_list()
                 self.bmk.update_time()
+                if self.ptf.curt_time == 147:
+                    print('error')
+            print('stop')

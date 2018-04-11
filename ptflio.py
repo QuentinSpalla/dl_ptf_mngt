@@ -10,11 +10,11 @@ import numpy as np
 
 class Portfolio:
     def __init__(self, nbr_assets, transac_fee_rate, initial_value, name=''):
-        self.weights = np.zeros(nbr_assets)
-        self.last_weights = np.zeros(nbr_assets)
+        self.weights = np.zeros([nbr_assets, 1])
+        self.last_weights = np.zeros([nbr_assets, 1])
         self.curt_time = 0
         self.curt_return = 0
-        self.curt_value = 0
+        self.curt_value = initial_value
         self.curt_transac_value = 0
         self.values = [initial_value]
         self.transac_values = [0]
@@ -41,10 +41,12 @@ class Portfolio:
         self.transac_values.append(self.curt_transac_value)
 
     def compute_transaction_fees(self):
-        self.curt_transac_value = sum(abs(self.weights - self.last_weights)) * self.curt_value * self.transac_fee_rate
+        self.curt_transac_value = float(sum(abs(self.weights - self.last_weights))
+                                        * self.curt_value
+                                        * self.transac_fee_rate)
 
     def compute_return(self, assets_ret):
-        self.curt_return = np.dot(self.weights, assets_ret)
+        self.curt_return = float(np.dot(self.weights.T, assets_ret))
 
     def compute_value(self):
-        self.curt_value = self.curt_value * (1.+self.curt_return)
+        self.curt_value = float(self.curt_value * (1.+self.curt_return))
