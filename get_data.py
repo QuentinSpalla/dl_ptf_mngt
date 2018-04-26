@@ -66,9 +66,9 @@ class AllData():
         if max_to_remove == NBR_MINUTES_STEP:
             self.data = self.data[max_to_remove+1:]
         else:
-            self.target = self.target[max_to_remove:]
+            self.df_target = self.df_target[max_to_remove:]
 
         self.data = self.data.fillna(method='ffill')
-        self.target = self.target.fillna(method='ffill')
+        self.df_target = pd.DataFrame(self.df_target).fillna(method='ffill').values
         # self.data.dropna(axis=0, how='any')
         # self.df_target = self.df_target[len(self.df_target)-len(self.data):]

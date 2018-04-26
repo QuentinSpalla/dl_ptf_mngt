@@ -6,13 +6,14 @@ from lstm_param import Param
 
 
 class LSTM:
-    def __init__(self, nn_f, nn_i, nn_c_bar, nn_o, tau_quantile):
+    def __init__(self, nn_f, nn_i, nn_c_bar, nn_o, tau_quantile, initial_learning_rate):
         self.nn_f = nn_f
         self.nn_i = nn_i
         self.nn_c_bar = nn_c_bar
         self.nn_o = nn_o
         self.tau_quantile = tau_quantile
         self.inter_val = Param()
+        self.learning_rate = initial_learning_rate
 
     def get_intermediate_values(self):
         temp_dict = {}
@@ -121,3 +122,25 @@ class LSTM:
             + self.tau_quantile * np.maximum(0, target-out_data)
         d_loss = np.ones(out_data.shape)*self.tau_quantile - np.maximum(0, target-out_data)/(target-out_data)
         return loss.reshape((loss.shape[0], 1)), d_loss.reshape((loss.shape[0], 1))
+
+    def update_weights_bias(self, dict_weights):
+        pass
+
+    def get_weights_bias(self):
+        pass
+
+    @staticmethod
+    def get_diff_weights_bias():
+        pass
+
+    def update_param(self):
+        temp_dic_diff = self.get_diff_weights_bias()
+        # f
+        self.nn_f.update_weights_bias(self.nn_f.get_all_weights_bias() - self.learning_rate * temp_dic_diff[''])
+        # i
+        self.nn_i.update_weights_bias(self.nn_i.get_all_weights_bias() - self.learning_rate * temp_dic_diff[''])
+        # c
+        self.nn_c_bar.update_weights_bias(self.nn_c_bar.get_all_weights_bias() - self.learning_rate * temp_dic_diff[''])
+        # o
+        self.nn_o.update_weights_bias(self.nn_o.get_all_weights_bias() - self.learning_rate * temp_dic_diff[''])
+        temp_dic_diff = None

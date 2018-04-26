@@ -89,6 +89,7 @@ class Strategy:
                 self.lstm.backward(out_data,
                                    intermediate_values,
                                    self.targets[curt_index-constants.BATCH_SIZE+1:curt_index+1])
+                self.lstm.update_param()
                 curt_batch_size = 0
                 intermediate_values = []
                 out_data = np.zeros((constants.BATCH_SIZE, constants.FC_OUTPUT_NEURONS))
