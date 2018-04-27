@@ -3,7 +3,7 @@
 
 import numpy as np
 from lstm_param import Param
-
+from tools import two_list_add
 
 class LSTM:
     def __init__(self, nn_f, nn_i, nn_c_bar, nn_o, tau_quantile, initial_learning_rate):
@@ -75,7 +75,7 @@ class LSTM:
 
         di = dc * self.inter_val.c_bar
         # nn direct
-        d_z_i = self.nn_c_bar.backpropagation(di)
+        d_z_i = self.nn_i.backpropagation(di)
         """
         di = dsigmoid(i) * di
         p.W_i.d += np.dot(di, z.T)
@@ -84,7 +84,7 @@ class LSTM:
 
         df = dc * self.inter_val.c_prev
         # nn direct
-        d_z_f = self.nn_c_bar.backpropagation(df)
+        d_z_f = self.nn_f.backpropagation(df)
         """
         df = dsigmoid(f) * df
         p.W_f.d += np.dot(df, z.T)
@@ -121,6 +121,18 @@ class LSTM:
         loss = (1-self.tau_quantile) * np.maximum(0, out_data-target) \
             + self.tau_quantile * np.maximum(0, target-out_data)
         d_loss = np.ones(out_data.shape)*self.tau_quantile - np.maximum(0, target-out_data)/(target-out_data)
+        if np.sum(np.isnan(d_loss))>0:
+            print('error nan d_loss')
+        if np.sum(np.isinf(loss))>0:
+            print('error inf d_loss')
+        if np.sum(d_loss>10):
+            print('error big value d_loss')
+        if np.sum(np.isnan(loss))>0:
+            print('error nan loss')
+        if np.sum(np.isinf(loss))>0:
+            print('error inf loss')
+        if np.sum(loss>10):
+            print('error big value loss')
         return loss.reshape((loss.shape[0], 1)), d_loss.reshape((loss.shape[0], 1))
 
     def update_weights_bias(self, dict_weights):
@@ -129,18 +141,30 @@ class LSTM:
     def get_weights_bias(self):
         pass
 
-    @staticmethod
-    def get_diff_weights_bias():
-        pass
+    def get_diff_weights_bias(self):
+        dic_dw_db = {}
+        dic_dw_db['nn_f'] = self.nn_f.get_all_diff_weights_bias()
+        dic_dw_db['nn_i'] = self.nn_i.get_all_diff_weights_bias()
+        dic_dw_db['nn_c'] = self.nn_c_bar.get_all_diff_weights_bias()
+        dic_dw_db['nn_o'] = self.nn_o.get_all_diff_weights_bias()
+        return dic_dw_db
 
     def update_param(self):
         temp_dic_diff = self.get_diff_weights_bias()
         # f
-        self.nn_f.update_weights_bias(self.nn_f.get_all_weights_bias() - self.learning_rate * temp_dic_diff[''])
+        self.nn_f.update_weights_bias(two_list_add(self.nn_f.get_all_weights_bias(),
+                                                   temp_dic_diff['nn_f'],
+                                                   self.learning_rate))
         # i
-        self.nn_i.update_weights_bias(self.nn_i.get_all_weights_bias() - self.learning_rate * temp_dic_diff[''])
+        self.nn_i.update_weights_bias(two_list_add(self.nn_i.get_all_weights_bias(),
+                                                   temp_dic_diff['nn_i'],
+                                                   self.learning_rate))
         # c
-        self.nn_c_bar.update_weights_bias(self.nn_c_bar.get_all_weights_bias() - self.learning_rate * temp_dic_diff[''])
+        self.nn_c_bar.update_weights_bias(two_list_add(self.nn_c_bar.get_all_weights_bias(),
+                                                       temp_dic_diff['nn_c'],
+                                                       self.learning_rate))
         # o
-        self.nn_o.update_weights_bias(self.nn_o.get_all_weights_bias() - self.learning_rate * temp_dic_diff[''])
+        self.nn_o.update_weights_bias(two_list_add(self.nn_o.get_all_weights_bias(),
+                                                   temp_dic_diff['nn_o'],
+                                                   self.learning_rate))
         temp_dic_diff = None

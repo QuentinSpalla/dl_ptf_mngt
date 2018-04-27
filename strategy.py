@@ -19,8 +19,8 @@ class Strategy:
     Contains the neural network and the portfolios
     """
     def __init__(self, data, dates, targets, first_ret_idx):
-        self.targets = targets
-        self.data = data
+        self.targets = (targets - np.mean(targets, 0)[None, :]) / np.var(targets, 0)[None, :]**(1/2) # / np.amax(abs(targets), 1)[:, None]
+        self.data = (data - np.mean(data, 0)[None, :]) / np.var(data, 0)[None, :]**(1/2)  #data / np.amax(abs(data), 1)[:, None]
         self.dates = dates
         self.bmk = None
         self.ptf = None
@@ -35,13 +35,13 @@ class Strategy:
         :return: neural network created
         """
         nn = NNetwork()
-        curt_lay = layer.FCLayer(self.data.shape[1] + self.targets.shape[1], constants.FC_1_NEURONS, True)
+        curt_lay = layer.FCLayer(self.data.shape[1] + self.targets.shape[1], constants.FC_1_NEURONS, constants.EDGE_GRADIENT, True)
         nn.add_layer(curt_lay, constants.FC_1_POS)
         nn.add_layer(layer.ReLULayer(), constants.RELU_1_POS)
-        curt_lay = layer.FCLayer(constants.FC_1_NEURONS, constants.FC_2_NEURONS, True)
+        curt_lay = layer.FCLayer(constants.FC_1_NEURONS, constants.FC_2_NEURONS, constants.EDGE_GRADIENT, True)
         nn.add_layer(curt_lay, constants.FC_2_POS)
         nn.add_layer(layer.ReLULayer(), constants.RELU_2_POS)
-        curt_lay = layer.FCLayer(constants.FC_2_NEURONS, constants.FC_OUTPUT_NEURONS, True)
+        curt_lay = layer.FCLayer(constants.FC_2_NEURONS, constants.FC_OUTPUT_NEURONS, constants.EDGE_GRADIENT, True)
         nn.add_layer(curt_lay, constants.FC_OUTPUT_POS)
         nn.add_layer(act_fun_lay, act_fun_pos)
         return nn
@@ -54,7 +54,7 @@ class Strategy:
         nn_i = self.create_neural_network(layer.SigmoidLayer(), constants.SIG_I_POS)
         nn_c = self.create_neural_network(layer.TanhLayer(), constants.TANH_C_POS)
         nn_o = self.create_neural_network(layer.SigmoidLayer(), constants.SIG_O_POS)
-        self.lstm = LSTM(nn_f, nn_i, nn_c, nn_o, constants.TAU_QUANTILE)
+        self.lstm = LSTM(nn_f, nn_i, nn_c, nn_o, constants.TAU_QUANTILE, constants.LEARNING_RATE)
 
     def create_portfolio(self):
         self.ptf = Portfolio(constants.FC_OUTPUT_NEURONS, constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
@@ -90,9 +90,14 @@ class Strategy:
                                    intermediate_values,
                                    self.targets[curt_index-constants.BATCH_SIZE+1:curt_index+1])
                 self.lstm.update_param()
+                if np.sum(np.isnan(self.lstm.nn_c_bar.layers[1].weights)) > 0:
+                    print('error')
+                if curt_index == 59-15:
+                    print('error')
                 curt_batch_size = 0
                 intermediate_values = []
                 out_data = np.zeros((constants.BATCH_SIZE, constants.FC_OUTPUT_NEURONS))
+                print(curt_index)
 
             curt_batch_size += 1
 

@@ -7,6 +7,7 @@ import math
 Useful functions
 """
 
+
 def get_vect_from_list(list_values):
     """
     Returns vector (N, 1) of a list containing matrixes 
@@ -89,7 +90,6 @@ def inv_conv2(in_data, out_data, stride):
     return ret
 
 
-
 def conv2(X, k, stride):
     """
     Convolution inspired from
@@ -109,15 +109,27 @@ def conv2(X, k, stride):
             ret[y,x] = np.sum(sub * k)
     return ret
 
+
 def get_kernel(init_height, output_size, stride):
     """
     Returns kernel size for weights in convolutional layer
     """
     return int(init_height-(output_size-1)*stride)
- 
+
+
 def get_height_after_conv(init_height, filter_size, stride):
     """
     Returns height of outputs in convolutional layer
     """
     return int(((init_height-filter_size)/stride+1))
 
+
+def two_list_add(list1, list2, coeff):
+    list_pos = 0
+    temp_list = [None] * len(list1)
+
+    while list_pos < len(list1):
+        temp_list[list_pos] = list1[list_pos] - coeff*list2[list_pos]
+        list_pos += 1
+
+    return temp_list

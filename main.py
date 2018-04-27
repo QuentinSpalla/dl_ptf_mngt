@@ -19,9 +19,9 @@ my_strategy = Strategy(dj.data.loc[:, dj.data.columns != 'DATE'].values,
                        dj.data['DATE'].values,
                        dj.df_target,
                        dj.first_idx_ret-1)
-#dj = None
+dj = None
 my_strategy.create_lstm()
-#my_strategy.train()
+my_strategy.train()
 
 my_strategy.create_benchmark()
 my_strategy.create_portfolio()

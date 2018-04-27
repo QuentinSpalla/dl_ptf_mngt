@@ -34,7 +34,7 @@ def get_vol_from_ret(v_ret, lag):
 
     for curt_idx in range(0, len(v_ret)-lag, 1):
         v_temp = v_ret[curt_idx:curt_idx+lag]
-        v_vol[curt_idx] = np.std(v_temp)
+        v_vol[curt_idx,:] = np.std(v_temp, 1)
     return v_vol
 
 

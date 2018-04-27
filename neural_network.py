@@ -31,6 +31,12 @@ class NNetwork():
         for layer_pos in range(1, len(self.layers) + 1, 1):
             layer = self.layers[layer_pos]
             out_data = layer.forward(out_data)
+            if np.sum(np.isnan(out_data)) > 0:
+                print('error nan out_data')
+            if np.sum(np.isinf(out_data)) > 0:
+                print('error inf out_data')
+            if np.sum(out_data > 5):
+                print('error big value out_data')
         return out_data
     
     def get_intermediate_values(self):
@@ -61,6 +67,12 @@ class NNetwork():
         while layer_pos >= 1:
             layer = self.layers[layer_pos]
             out_data = layer.backward(out_data)
+            if np.sum(np.isnan(out_data)) > 0:
+                print('error nan out_data')
+            if np.sum(np.isinf(out_data)) > 0:
+                print('error inf out_data')
+            if np.sum(out_data > 10):
+                print('error big value out_data')
             layer_pos -= 1
 
         return out_data
@@ -95,6 +107,10 @@ class NNetwork():
             layer = self.layers[layer_pos]            
             curt_dw_db = layer.get_diff_weights_bias()
             if not curt_dw_db is None:
+                if np.sum(np.isnan(curt_dw_db[0])) > 0:
+                    print('error')
+                if np.sum(np.isnan(curt_dw_db[1])) > 0:
+                    print('error')
                 dw_b.append(curt_dw_db[0])
                 dw_b.append(curt_dw_db[1])
                 layer.clear_weights_bias()
@@ -102,8 +118,8 @@ class NNetwork():
             layer_pos -= 1
         
         dw_b.reverse()
-        vec_diff_weights_bias = get_vect_from_list(dw_b)
-        return vec_diff_weights_bias 
+        #vec_diff_weights_bias = get_vect_from_list(dw_b)
+        return dw_b
     
     
     def get_all_weights_bias(self):
@@ -125,8 +141,8 @@ class NNetwork():
             layer_pos -= 1
         
         w_b.reverse()
-        vec_weights_bias = get_vect_from_list(w_b)
-        return vec_weights_bias 
+        #vec_weights_bias = get_vect_from_list(w_b)
+        return w_b
     
     def get_all_shapes(self):
         """
