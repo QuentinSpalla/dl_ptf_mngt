@@ -103,6 +103,18 @@ class LSTM:
         """
         dh_prev = dz[:len(d_loss), :]
         dc_prev = self.inter_val.f * dc
+        if np.sum(np.isnan(dh_prev))>0:
+            print('error nan dh_prev')
+        if np.sum(np.isinf(dh_prev))>0:
+            print('error inf dh_prev')
+        if np.sum(abs(dh_prev)>100) > 0:
+            print('error big value dh_prev')
+        if np.sum(np.isnan(dc_prev))>0:
+            print('error nan loss')
+        if np.sum(np.isinf(dc_prev))>0:
+            print('error inf dc_prev')
+        if np.sum(abs(dc_prev)>100) > 0:
+            print('error big value dc_prev')
         return dh_prev, dc_prev
 
     def backward(self, out_data, intermediate_values, targets):
@@ -113,6 +125,18 @@ class LSTM:
             self.update_inter_val(intermediate_values[curt_idx])
             curt_loss, curt_d_loss = self.get_loss_and_d(out_data[curt_idx, :], targets[curt_idx, :])
             dh_next, dc_next = self.backprogation(curt_d_loss, dh_next, dc_next)
+            if np.sum(np.isnan(dh_next)) > 0:
+                print('error nan dh_next')
+            if np.sum(np.isinf(dh_next)) > 0:
+                print('error inf dh_next')
+            if np.sum(abs(dh_next) > 100)>0:
+                print('error big value dh_next')
+            if np.sum(np.isnan(dc_next)) > 0:
+                print('error nan dc_next')
+            if np.sum(np.isinf(dc_next)) > 0:
+                print('error inf dc_next')
+            if np.sum(abs(dc_next) > 100)>0:
+                print('error big value dc_next')
 
     def get_loss_and_d(self, out_data, target):
         """
@@ -123,7 +147,7 @@ class LSTM:
         d_loss = np.ones(out_data.shape)*self.tau_quantile - np.maximum(0, target-out_data)/(target-out_data)
         if np.sum(np.isnan(d_loss))>0:
             print('error nan d_loss')
-        if np.sum(np.isinf(loss))>0:
+        if np.sum(np.isinf(d_loss))>0:
             print('error inf d_loss')
         if np.sum(d_loss>10):
             print('error big value d_loss')

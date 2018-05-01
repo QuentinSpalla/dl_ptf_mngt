@@ -24,15 +24,18 @@ class FCLayer:
             """
             self.weights =np.random.uniform(low=-d
                                            , high=d
-                                           , size=(input_num, output_num))  
-            self.bias =np.random.uniform(low=-d
+                                           , size=(input_num, output_num))
+            self.bias = np.zeros((output_num, 1))
+            """
+            self.bias = np.random.uniform(low=-d
                                          , high=d
                                          , size=(output_num, 1))
-
+            """
         else:
             self.weights =np.empty([input_num, output_num])      
             self.bias =np.empty([output_num, 1])
-        self.clear_weights_bias()
+        self.db = np.zeros_like(self.bias)
+        self.dw = np.zeros_like(self.weights)
     
     def get_shape_wb(self):
         return self.weights.shape, self.bias.shape
@@ -75,6 +78,8 @@ class FCLayer:
         return self.dw, self.db
     
     def clear_weights_bias(self):
+        print('SELF DB MAX = ' + str(abs(self.db).max()))
+        print('SELF DW MAX = ' + str(abs(self.dw).max()))
         self.db = np.zeros_like(self.bias)
         self.dw = np.zeros_like(self.weights)
     
