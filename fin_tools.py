@@ -1,24 +1,22 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar  6 11:50:48 2018
-
-@author: SPALLA
-"""
 import numpy as np
 
 
 def compute_sharpe_ratio(ret_p, risk_free_rate, st_dev_p):
+    """
+    :param ret_p: float, portfolio return
+    :param risk_free_rate: float
+    :param st_dev_p: float, portfolio volatility
+    :return: float, computed Sharpe ratio
+    """
     return (ret_p - risk_free_rate) / st_dev_p
 
 
-def get_average_price(high_price, low_price, close_price):
-    # fonction pour recuperer le prix moyen a partir du High, Low et Close
-    return ((high_price+low_price+close_price)/3)
-
-
 def get_return_from_prices (v_prices, lag):
-    # fonction pour recuperer les rendements a partir des prix (selon une periode)
+    """
+    :param v_prices: ndarray, historical prices
+    :param lag: long, used to compute return on a specific period
+    :return: ndarray, computed returns
+    """
     delta = v_prices.diff(lag)
     delta = delta[lag:]
     v_returns = delta/v_prices.shift(lag)
@@ -27,10 +25,12 @@ def get_return_from_prices (v_prices, lag):
 
 def get_vol_from_ret(v_ret, lag):
     """
-    Returns volatility from returns with given period
+
+    :param v_ret: ndarray, historical returns
+    :param lag: long, used to compute on a specific period
+    :return: ndarray, computed volatility
     """
     v_vol = np.zeros([v_ret.shape[0]-lag, v_ret.shape[1]])
-    # v_vol = np.zeros(len(v_ret) - lag)
 
     for curt_idx in range(0, len(v_ret)-lag, 1):
         v_temp = v_ret[curt_idx:curt_idx+lag]
@@ -39,6 +39,12 @@ def get_vol_from_ret(v_ret, lag):
 
 
 def get_rsi_from_price(v_prices, lag):
+    """
+    Computes the Relative Strength Index
+    :param v_prices: ndarray, historical prices
+    :param lag: long, used to compute on a specific period
+    :return: ndarray, computed rsi
+    """
     delta = v_prices.diff()
     delta = delta[1:]
     dUp, dDown = delta.copy(), delta.copy()
@@ -54,39 +60,17 @@ def get_rsi_from_price(v_prices, lag):
     return rsi
 
 
-def get_sto_osc_from_price(v_prices, v_low, v_high, lag): 
-    stok = ((v_prices - v_low.rolling(lag).min()) / (v_high.rolling(lag).max() - v_low.rolling(lag_days).min())) * 100
-    return stok
-
-def get_williams_from_price(v_prices, v_low, v_high, lag): 
-    williams = ((v_high.rolling(lag).max() - v_prices) / (v_high.rolling(lag).max() - v_low.rolling(lag_days).min())) * (-100)
-    return williams
-
-def get_macd_from_price(v_prices, short_days, long_days, signal_days=9): 
-    ema_short = v_prices.ewm(span=short_days).mean()
-    ema_long = v_prices.ewm(span=long_days).mean()
-    ema_signal = v_prices.ewm(span=signal_days).mean()
-    macd = ema_short[long_days:] - ema_long[long_days:]
-    return macd-ema_signal
-
-
-def get_proc_from_price(v_prices, lag): 
+def get_proc_from_price(v_prices, lag):
+    """
+    Computes the Price Rate Of Change
+    :param v_prices: ndarray, historical prices
+    :param lag: long, used to compute on a specific period
+    :return: ndarray, computed proc
+    """
     proc = v_prices.pct_change(lag)
     return proc
 
-def get_obv_from_volume(v_prices, v_volumes, lag): 
-    delta = v_prices.diff(lag)
-    obv = v_volumes.copy()
-    obv[delta==0] = 0
-    obv[delta<0] = -v_volumes[delta<0]
-    obv = obv.cumsum()
-    return obv
 
-def get_atr_from_price(v_prices, v_lows, v_highs, lag, n=20):     
-    tr = pd.concat([(v_highs - v_lows).abs(), (v_highs - v_prices.shift(lag)).abs(), (v_lows - v_prices.shift(lag)).abs()],axis=1).T.max()
-    atr = tr
-    
-    for i in range(1,len(atr)):          
-        atr[i] = ((n-1)*atr[i-1]+tr[i])/n
-        
-    return atr
+
+
+

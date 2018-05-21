@@ -1,5 +1,3 @@
-
-
 # DATA
 INPUT_FILE = 'data_stocks_dj.csv'
 OUTPUT_FILE = 'output_ptf_values.csv'

@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar  6 11:40:52 2018
-
-@author: SPALLA
-"""
 import constants
 import math
 import layer
@@ -16,27 +9,34 @@ from lstm import LSTM
 
 class Strategy:
     """
-    Contains the neural network and the portfolios
+    Contains the lstm, financial portfolios
     """
     def __init__(self, data, dates, targets, first_ret_idx):
-        self.targets = (targets - np.mean(targets, 0)[None, :]) / np.var(targets, 0)[None, :]**(1/2) # / np.amax(abs(targets), 1)[:, None]
-        self.data = (data - np.mean(data, 0)[None, :]) / np.var(data, 0)[None, :]**(1/2)  #data / np.amax(abs(data), 1)[:, None]
-        self.all_returns = data[:, first_ret_idx:first_ret_idx+constants.FC_OUTPUT_NEURONS]
+        """
+        Retrieves data and preprocess them (better for deep learning)
+        :param data: ndarray, all raw data
+        :param dates: ndarray, all dates
+        :param targets: ndarray, all raw targets
+        :param first_ret_idx: long, index of first column of returns in the data
+        """
+        self.targets = (targets - np.mean(targets, 0)[None, :]) / np.var(targets, 0)[None, :]**(1/2)
+        self.data = (data - np.mean(data, 0)[None, :]) / np.var(data, 0)[None, :]**(1/2)
+        self.all_returns = data[:, first_ret_idx:first_ret_idx + constants.FC_OUTPUT_NEURONS]
         self.dates = dates
         self.bmk = None
         self.ptf = None
         self.lstm = None
-        #self.first_ret_idx = first_ret_idx
 
     def create_neural_network(self, act_fun_lay, act_fun_pos):
         """
         Creates 2 hidden fully connected neural network with chosen last activation function
-        :param act_fun_lay: activation function
+        :param act_fun_lay: layer, activation function as layer
         :param act_fun_pos: activation function position
-        :return: neural network created
+        :return: NNetwork, neural network created
         """
         nn = NNetwork()
-        curt_lay = layer.FCLayer(self.data.shape[1] + self.targets.shape[1], constants.FC_1_NEURONS, constants.EDGE_GRADIENT, True)
+        curt_lay = layer.FCLayer(self.data.shape[1] + self.targets.shape[1], constants.FC_1_NEURONS,
+                                 constants.EDGE_GRADIENT, True)
         nn.add_layer(curt_lay, constants.FC_1_POS)
         nn.add_layer(layer.ReLULayer(), constants.RELU_1_POS)
         curt_lay = layer.FCLayer(constants.FC_1_NEURONS, constants.FC_2_NEURONS, constants.EDGE_GRADIENT, True)
@@ -49,7 +49,7 @@ class Strategy:
 
     def create_lstm(self):
         """
-        Creates the lstm neural network
+        Creates all neural networks and the vanilla lstm
         """
         nn_f = self.create_neural_network(layer.SigmoidLayer(), constants.SIG_F_POS)
         nn_i = self.create_neural_network(layer.SigmoidLayer(), constants.SIG_I_POS)
@@ -58,6 +58,9 @@ class Strategy:
         self.lstm = LSTM(nn_f, nn_i, nn_c, nn_o, constants.TAU_QUANTILE, constants.LEARNING_RATE)
 
     def create_portfolio(self):
+        """
+        Creates portfolio with weights depending on lstm outputs
+        """
         self.ptf = Portfolio(constants.FC_OUTPUT_NEURONS, constants.TRANSACTION_FEE_RATE, constants.INITIAL_PTF_VALUE
                              , name='portfolio')
         self.ptf.update_weights(1 / len(self.ptf.weights) * np.ones([len(self.ptf.weights), 1]))
@@ -72,7 +75,11 @@ class Strategy:
 
     def train(self, size_train=0.7):
         """
-        Updates the Neural Net
+        Trains the lstm vanilla using the data
+        Target is Sharpe ratios for all assets
+        Tau Quantile loss
+        Batch gradient descent
+        :param size_train: float, proportion of the data used for training
         """
         h_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
         c_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
@@ -91,10 +98,6 @@ class Strategy:
                                    intermediate_values,
                                    self.targets[curt_index-constants.BATCH_SIZE+1:curt_index+1])
                 self.lstm.update_param()
-                if np.sum(np.isnan(self.lstm.nn_c_bar.layers[1].weights)) > 0:
-                    print('error')
-                if curt_index == 59-15:
-                    print('error')
                 curt_batch_size = 0
                 intermediate_values = []
                 out_data = np.zeros((constants.BATCH_SIZE, constants.FC_OUTPUT_NEURONS))
@@ -104,8 +107,10 @@ class Strategy:
 
     def test(self, size_test=0.3, is_nn_to_train=False):
         """
-        Uses NN to predict Sharpe Ratios.
-        Updates the portfolios weights and computes portfolio returns.
+        Lstm predicts Sharpes ratios, then there is a portfolio management using those predictions with bigger weights
+        on better Sharpe ratios
+        :param size_test: float, proportion of the data used for testing
+        :param is_nn_to_train: boolean, true if lstm already trained
         """
         if not is_nn_to_train:
             h_prev = np.zeros((constants.FC_OUTPUT_NEURONS, 1))
@@ -118,7 +123,8 @@ class Strategy:
                                     constants.NBR_MINUTES_STEP):
                 in_data = self.data[curt_index, :].reshape(self.data.shape[1], 1)
                 h_prev, c_prev = self.lstm.forward(h_prev, c_prev, in_data)
-                temp_ret = self.all_returns[curt_index + constants.NBR_MINUTES_STEP].reshape(constants.FC_OUTPUT_NEURONS, 1)
+                temp_ret = self.all_returns[curt_index + constants.NBR_MINUTES_STEP].reshape(constants.FC_OUTPUT_NEURONS
+                                                                                             , 1)
                 self.ptf.compute_return(temp_ret)
                 self.ptf.compute_value()
                 self.ptf.update_weights_inv_rdt(temp_ret)
@@ -133,6 +139,3 @@ class Strategy:
                 self.bmk.compute_transaction_fees()
                 self.bmk.update_val_list()
                 self.bmk.update_time()
-                if self.ptf.curt_time == 147:
-                    print('error')
-            print('stop')

@@ -1,48 +1,37 @@
-# -*- coding: utf-8 -*-
-
 import numpy as np
-from tools import get_vect_from_list
 
 
 class NNetwork():
     """
-    Deep Neural Network that takes in 
-    Inputs : images of a game (84,84,4)
-    Outputs : 
-        - probabilities for each actions 
-        - value of the current state V(s) = E[Rt\s_t=s]
-    
+    Neural Network with multiple layers
     """
-    def __init__(self):        
-        # self.pi = []
-        # self.value = 0
+    def __init__(self):
         self.layers = {}
 
     def add_layer(self, layer, position):
+        """
+        Adds a layer to the neural network
+        :param layer: Layer, layer to add
+        :param position: long
+        """
         self.layers[position] = layer    
 
     def get_output(self, in_data):
         """
         Computes forward output threw the neural network
-        :param in_data: input data of the NN
+        :param in_data: ndarray, input data of the NN
         """
         out_data = in_data
 
         for layer_pos in range(1, len(self.layers) + 1, 1):
             layer = self.layers[layer_pos]
             out_data = layer.forward(out_data)
-            if np.sum(np.isnan(out_data)) > 0:
-                print('error nan out_data')
-            if np.sum(np.isinf(out_data)) > 0:
-                print('error inf out_data')
-            if np.sum(out_data > 5):
-                print('error big value out_data')
         return out_data
     
     def get_intermediate_values(self):
         """
-        Returns values at each neurons 
-        of layers which are useful for the backpropagation
+        Returns values at each neurons of layers
+        Used for backpropagation
         """
         intermediate_values = []
         for layer_pos in range(1, len(self.layers)+1):
@@ -51,54 +40,34 @@ class NNetwork():
         return intermediate_values
 
     def update_val(self, inter_val):
+        """
+        Updates all intermediate valeus for each layer of the neural network
+        :param inter_val: dictionary, all intermediate values of a neural network
+        """
         for layer_pos in range(1, len(self.layers)+1):
             layer = self.layers[layer_pos]
             layer.update_val(inter_val[layer_pos-1])
 
     def backpropagation(self, d_loss):
         """
-        Backpropagation threw the nn's layers
-        :param d_loss: derivative loss
-        :return: First layer derivative
+        Backpropagation threw the neural network's layers
+        :param d_loss: ndarray, derived loss
+        :return: ndarray, First layer derivative
         """
         out_data = d_loss
-        layer_pos = len(self.layers)    # if not activation layer :- 1
+        layer_pos = len(self.layers)
 
         while layer_pos >= 1:
             layer = self.layers[layer_pos]
             out_data = layer.backward(out_data)
-            if np.sum(np.isnan(out_data)) > 0:
-                print('error nan out_data')
-            if np.sum(np.isinf(out_data)) > 0:
-                print('error inf out_data')
-            if np.sum(out_data > 10):
-                print('error big value out_data')
             layer_pos -= 1
 
         return out_data
-
-    def backpropag_pi(self, loss, values):
-        """
-        Makes the backpropagation on all the convolutional network 
-        using the probability final layer
-        Returns the weigts difference
-        """
-        out_data = loss        
-        layer_pos = len(self.layers) - 1
-        
-        while layer_pos >=1:
-            layer = self.layers[layer_pos]            
-            layer.update_val(values[layer_pos-1])
-            out_data = layer.backward(out_data)
-            if np.min(out_data)< -5 or np.max(out_data)>5:
-                print('ERROR out_data backpropag')
-            layer_pos -= 1
-
     
     def get_all_diff_weights_bias(self):
         """
-        Return in a vect (N,1) all the gradients (weights and bias)
-        of the NeuralNet
+        Retrieves gradients for each layers of the neural network
+        :return: ndarray, all gradients (weights and bias) of the neural network
         """
         dw_b = []
         layer_pos = len(self.layers)
@@ -107,10 +76,6 @@ class NNetwork():
             layer = self.layers[layer_pos]            
             curt_dw_db = layer.get_diff_weights_bias()
             if not curt_dw_db is None:
-                if np.sum(np.isnan(curt_dw_db[0])) > 0:
-                    print('error')
-                if np.sum(np.isnan(curt_dw_db[1])) > 0:
-                    print('error')
                 dw_b.append(curt_dw_db[0])
                 dw_b.append(curt_dw_db[1])
                 layer.clear_weights_bias()
@@ -118,13 +83,12 @@ class NNetwork():
             layer_pos -= 1
         
         dw_b.reverse()
-        #vec_diff_weights_bias = get_vect_from_list(dw_b)
         return dw_b
-    
-    
+
     def get_all_weights_bias(self):
         """
-        Return in a vect (N,1) all the weights and bias of the NeuralNet
+        Retrieves weights/bias for each layers of the neural network
+        :return: ndarray, all weights and bias of the neural network
         """
         w_b = []
         
@@ -141,44 +105,12 @@ class NNetwork():
             layer_pos -= 1
         
         w_b.reverse()
-        #vec_weights_bias = get_vect_from_list(w_b)
         return w_b
-    
-    def get_all_shapes(self):
-        """
-        Returns the shapes of all layer weights
-        """
-        w_b_shapes = []
-        
-        layer_pos = len(self.layers)
-        
-        while layer_pos >=1:
-            layer = self.layers[layer_pos]            
-            curt_w_b = layer.get_shape_wb()
-            if not curt_w_b is None:
-                w_b_shapes.append(curt_w_b[0])
-                w_b_shapes.append(curt_w_b[1])
-                layer.clear_weights_bias()
-                
-            layer_pos -= 1
-        
-        w_b_shapes.reverse()        
-        return w_b_shapes 
-    
-    def backpropag_value(self, loss, values):
-        """
-        Makes the backpropagation on the last value layer
-        Returns the weigts difference of that layer
-        """
-        out_data = loss        
-        layer_pos = len(self.layers)                
-        layer = self.layers[layer_pos]            
-        layer.update_val(values[layer_pos-1])
-        layer.backward(out_data)
          
     def update_weights_bias(self, list_weights_bias):
         """
-        Update Weights and Bias
+        Update weights and bias of each layers of the neural network
+        :param list_weights_bias: list, all weights and bias of the neural network
         """
         layer_pos = 1
         i=0
