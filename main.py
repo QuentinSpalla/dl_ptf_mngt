@@ -1,14 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Mar  8 21:21:52 2018
-
-@author: SPALLA
-"""
-
+import matplotlib.pyplot as plt
 import constants
 from get_data import AllData
 from strategy import Strategy
+import numpy as np
+
+
+np.random.seed(1234)
 
 dj = AllData(constants.INPUT_FILE)
 dj.add_indicators()
@@ -27,4 +24,9 @@ my_strategy.create_benchmark()
 my_strategy.create_portfolio()
 my_strategy.test()
 
+
+plt.plot(my_strategy.ptf.values, '--', lw=3, label='PTF')
+plt.plot(my_strategy.bmk.values, '-', lw=3, label='BMK')
+plt.legend()
+plt.show()
 print('the end')

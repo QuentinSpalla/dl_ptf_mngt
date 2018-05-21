@@ -21,11 +21,12 @@ class Strategy:
     def __init__(self, data, dates, targets, first_ret_idx):
         self.targets = (targets - np.mean(targets, 0)[None, :]) / np.var(targets, 0)[None, :]**(1/2) # / np.amax(abs(targets), 1)[:, None]
         self.data = (data - np.mean(data, 0)[None, :]) / np.var(data, 0)[None, :]**(1/2)  #data / np.amax(abs(data), 1)[:, None]
+        self.all_returns = data[:, first_ret_idx:first_ret_idx+constants.FC_OUTPUT_NEURONS]
         self.dates = dates
         self.bmk = None
         self.ptf = None
         self.lstm = None
-        self.first_ret_idx = first_ret_idx
+        #self.first_ret_idx = first_ret_idx
 
     def create_neural_network(self, act_fun_lay, act_fun_pos):
         """
@@ -117,8 +118,7 @@ class Strategy:
                                     constants.NBR_MINUTES_STEP):
                 in_data = self.data[curt_index, :].reshape(self.data.shape[1], 1)
                 h_prev, c_prev = self.lstm.forward(h_prev, c_prev, in_data)
-                temp_ret = self.data[curt_index + constants.NBR_MINUTES_STEP,
-                           self.first_ret_idx:self.first_ret_idx+constants.FC_OUTPUT_NEURONS].reshape(constants.FC_OUTPUT_NEURONS, 1)
+                temp_ret = self.all_returns[curt_index + constants.NBR_MINUTES_STEP].reshape(constants.FC_OUTPUT_NEURONS, 1)
                 self.ptf.compute_return(temp_ret)
                 self.ptf.compute_value()
                 self.ptf.update_weights_inv_rdt(temp_ret)

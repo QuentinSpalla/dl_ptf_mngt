@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Mar  1 17:45:49 2018
-
-@author: SPALLA
-"""
-
 import pandas as pd
 import fin_tools as ft
 from tools import rename_df
@@ -48,8 +41,8 @@ class AllData():
 
     def create_target(self):
         """
-        Computes All Sharpe Ratios for the data.
-        Return for each step but vol for NBR_MINUTES_STEP steps.
+        Computes Sharpe ratios from the prices
+        Computes financial returns for each step but volat for NBR_MINUTES_STEP steps
         """
         temp_ret = ft.get_return_from_prices(self.df_prices.loc[:, self.df_prices.columns != 'DATE'], 1)
         temp_vol = ft.get_vol_from_ret(temp_ret.values, NBR_MINUTES_STEP)
@@ -70,5 +63,3 @@ class AllData():
 
         self.data = self.data.fillna(method='ffill')
         self.df_target = pd.DataFrame(self.df_target).fillna(method='ffill').values
-        # self.data.dropna(axis=0, how='any')
-        # self.df_target = self.df_target[len(self.df_target)-len(self.data):]

@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
-
 import numpy as np
 from tools import conv2, get_height_after_conv, inv_conv2, conv_delta
 
 """
-File inspired from 
-https://github.com/muupan/async-rl/blob/master/a3c_ale.py
-weights initialization based on muupan's code
+File inspired from https://github.com/muupan/async-rl/blob/master/a3c_ale.p weights initialization based on muupan's 
+code
 """
         
         
@@ -30,8 +27,8 @@ class FCLayer:
                                          , size=(output_num, 1))
 
         else:
-            self.weights =np.empty([input_num, output_num])      
-            self.bias =np.empty([output_num, 1])
+            self.weights = np.empty([input_num, output_num])
+            self.bias = np.empty([output_num, 1])
         self.clear_weights_bias()
     
     def get_shape_wb(self):

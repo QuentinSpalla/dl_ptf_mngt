@@ -5,6 +5,7 @@ import numpy as np
 from lstm_param import Param
 from tools import two_list_add
 
+
 class LSTM:
     def __init__(self, nn_f, nn_i, nn_c_bar, nn_o, tau_quantile, initial_learning_rate):
         self.nn_f = nn_f
@@ -14,6 +15,9 @@ class LSTM:
         self.tau_quantile = tau_quantile
         self.inter_val = Param()
         self.learning_rate = initial_learning_rate
+        self.dh_list = np.zeros(shape=(50000,1))
+        self.dc_list = np.zeros(shape=(50000,1))
+        self.counter = 0
 
     def get_intermediate_values(self):
         temp_dict = {}
@@ -109,10 +113,14 @@ class LSTM:
         dh_next = np.zeros((targets.shape[1], 1))
         dc_next = np.zeros((targets.shape[1], 1))
 
+
         for curt_idx in range(targets.shape[0]):
             self.update_inter_val(intermediate_values[curt_idx])
             curt_loss, curt_d_loss = self.get_loss_and_d(out_data[curt_idx, :], targets[curt_idx, :])
             dh_next, dc_next = self.backprogation(curt_d_loss, dh_next, dc_next)
+            self.dc_list[self.counter] = np.max(dc_next)
+            self.dh_list[self.counter] = np.max(dh_next)
+            self.counter += 1
 
     def get_loss_and_d(self, out_data, target):
         """
